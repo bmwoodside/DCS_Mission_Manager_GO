@@ -19,9 +19,18 @@ type AgentStatusResponse struct {
 	Online bool `json:"online"`
 }
 
-func AgentStatusHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(AgentStatusResponse{Online: false})
+type AgentStatusProvider interface {
+	Online() bool
+}
+
+func NewAgentStatusHandler(p AgentStatusProvider) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		resp := AgentStatusResponse{
+			Online: p.Online(),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}
 }
 
 func UploadHandler(w http.ResponseWriter, r *http.Request) {

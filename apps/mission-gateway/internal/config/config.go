@@ -6,12 +6,15 @@ type Config struct {
 	Addr string
 
 	PublicDir string
+
+	AgentSecret string
 }
 
 func FromEnv() Config {
 	return Config{
-		Addr:      getEnv("ADDR", ":8000"),
-		PublicDir: getEnv("PUBLIC_DIR", "web"),
+		Addr:        getEnv("ADDR", ":8000"),
+		PublicDir:   getEnv("PUBLIC_DIR", "web"),
+		AgentSecret: getEnv("AGENT_SECRET", ""),
 	}
 }
 

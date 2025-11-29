@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"time"
 
+	"dcs-mission-manager/mission-gateway/internal/agent"
 	"dcs-mission-manager/mission-gateway/internal/config"
 	v1 "dcs-mission-manager/mission-gateway/internal/httpapi/v1"
 	"dcs-mission-manager/mission-gateway/internal/version"
@@ -19,7 +20,8 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	//temp TODO REMOVE ME AFTER TESTING
+	agentMgr := agent.NewManager(cfg.AgentSecret)
+
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		fmt.Fprintf(w, "%s %s (%s)\n", version.AppName, version.Version, version.Commit)
@@ -30,9 +32,12 @@ func main() {
 	fs := http.FileServer(http.Dir(cfg.PublicDir))
 	mux.Handle("/app/", http.StripPrefix("/app/", fs))
 
+	// API v1 routes
 	mux.HandleFunc("/api/v1/health", v1.HealthHandler)
-	mux.HandleFunc("/api/v1/agent/health", v1.AgentStatusHandler)
+	mux.HandleFunc("/api/v1/agent/health", v1.NewAgentStatusHandler(agentMgr))
 	mux.HandleFunc("/api/v1/upload", v1.UploadHandler)
+
+	mux.Handle("/agent/ws", agentMgr)
 
 	srv := &http.Server{
 		Addr:              cfg.Addr,
