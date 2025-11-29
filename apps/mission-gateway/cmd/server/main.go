@@ -12,15 +12,19 @@ import (
 	"dcs-mission-manager/mission-gateway/internal/agent"
 	"dcs-mission-manager/mission-gateway/internal/config"
 	v1 "dcs-mission-manager/mission-gateway/internal/httpapi/v1"
+	"dcs-mission-manager/mission-gateway/internal/upload"
 	"dcs-mission-manager/mission-gateway/internal/version"
 )
 
 func main() {
 	cfg := config.FromEnv()
-
 	mux := http.NewServeMux()
-
 	agentMgr := agent.NewManager(cfg.AgentSecret)
+
+	uploadHandler := &upload.Handler{
+		Agent:   agentMgr,
+		MaxSize: 2 << 30, // e.g. 2 GiB max (need to long-term sample how much is acceptable)
+	}
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
@@ -35,7 +39,7 @@ func main() {
 	// API v1 routes
 	mux.HandleFunc("/api/v1/health", v1.HealthHandler)
 	mux.HandleFunc("/api/v1/agent/health", v1.NewAgentStatusHandler(agentMgr))
-	mux.HandleFunc("/api/v1/upload", v1.UploadHandler)
+	mux.Handle("/api/v1/upload", uploadHandler)
 
 	mux.Handle("/agent/ws", agentMgr)
 

@@ -32,7 +32,3 @@ func NewAgentStatusHandler(p AgentStatusProvider) http.HandlerFunc {
 		_ = json.NewEncoder(w).Encode(resp)
 	}
 }
-
-func UploadHandler(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "upload stream-through not implemented yet...", http.StatusNotImplemented) //placeholder _temp
-}
